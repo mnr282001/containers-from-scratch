@@ -31,6 +31,7 @@ func run() {
 	}
 
 	must(cmd.Run())
+
 }
 
 func must(err error) {

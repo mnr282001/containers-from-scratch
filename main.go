@@ -39,7 +39,9 @@ func run() {
 func child() {
 	fmt.Printf("Running %v as %d\n", os.Args[2:], os.Getpid())
 
-	syscall.Sethostname([]byte("container"))
+	must(syscall.Sethostname([]byte("container")))
+	must(syscall.Chroot("/home/nayabrehmat.guest/ubuntu-fs"))
+	must(syscall.Chdir("/"))
 
 	cmd := exec.Command(os.Args[2], os.Args[3:]...)
 	cmd.Stdin = os.Stdin

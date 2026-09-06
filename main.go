@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
 	"syscall"
 )
 
@@ -40,6 +42,8 @@ func run() {
 func child() {
 	fmt.Printf("Running %v as %d\n", os.Args[2:], os.Getpid())
 
+	cg()
+
 	must(syscall.Sethostname([]byte("container")))
 	must(syscall.Chroot("/home/nayabrehmat.guest/ubuntu-fs"))
 	must(syscall.Chdir("/"))
@@ -54,6 +58,20 @@ func child() {
 
 	syscall.Unmount("/proc", 0)
 
+}
+
+// cg sets up a cgroup v2 (unified hierarchy) leaf for the container and moves
+// this process into it. Children inherit the cgroup, so the limits apply to
+// whatever we exec afterwards.
+func cg() {
+	cgPath := "/sys/fs/cgroup/container"
+	must(os.MkdirAll(cgPath, 0755))
+
+	must(os.WriteFile(filepath.Join(cgPath, "pids.max"), []byte("20"), 0644))
+	must(os.WriteFile(filepath.Join(cgPath, "memory.max"), []byte("100M"), 0644))
+
+	must(os.WriteFile(filepath.Join(cgPath, "cgroup.procs"),
+		[]byte(strconv.Itoa(os.Getpid())), 0644))
 }
 
 func must(err error) {

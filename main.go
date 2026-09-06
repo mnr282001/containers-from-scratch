@@ -29,7 +29,8 @@ func run() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID,
+		Cloneflags:   syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS,
+		Unshareflags: syscall.CLONE_NEWNS,
 	}
 
 	must(cmd.Run())
@@ -42,6 +43,7 @@ func child() {
 	must(syscall.Sethostname([]byte("container")))
 	must(syscall.Chroot("/home/nayabrehmat.guest/ubuntu-fs"))
 	must(syscall.Chdir("/"))
+	syscall.Mount("proc", "proc", "proc", 0, "")
 
 	cmd := exec.Command(os.Args[2], os.Args[3:]...)
 	cmd.Stdin = os.Stdin
@@ -49,6 +51,8 @@ func child() {
 	cmd.Stderr = os.Stderr
 
 	must(cmd.Run())
+
+	syscall.Unmount("/proc", 0)
 
 }
 

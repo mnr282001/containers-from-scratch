@@ -1,0 +1,10 @@
+{
+  // This project targets Linux (namespaces, chroot, cgroups). Analyze it as Linux
+  // so gopls resolves syscall.SysProcAttr.Cloneflags and the CLONE_* constants,
+  // which don't exist on darwin. Local `go build` will still fail on macOS.
+  "gopls": {
+    "build.env": {
+      "GOOS": "linux"
+    }
+  }
+}
